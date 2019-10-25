@@ -1,0 +1,58 @@
+---
+title: "ml3"
+author: "Rithin Gujja"
+date: "24/10/2019"
+output: html_document
+---
+## 1) cleaning data an data partitioning ##
+```{r} 
+getwd()
+library(dplyr)
+library(caret)
+library(ISLR)
+library(gmodels)
+library(e1071)
+air<-read.csv("FlightDelays.csv")
+ml2<-select(air,c(1,4,2,8,10,13))
+ml2$CRS_DEP_TIME<-as.factor(ml2$CRS_DEP_TIME)
+ml2$DAY_WEEK<-as.factor(ml2$DAY_WEEK)
+set.seed(15)
+Train_Index=createDataPartition(ml2$CRS_DEP_TIME,p=0.6,list = FALSE)
+Train_Data=ml2[Train_Index,]
+Validation_Data=ml2[-Train_Index,]
+NROW(Train_Data)
+NROW(Validation_Data)
+```
+## 2Q) naive bayes classifier ##
+```{r}
+nb<-naiveBayes(Flight.Status~CRS_DEP_TIME+DEST+CARRIER+ORIGIN+DAY_WEEK,data=Train_Data)
+nb
+```
+## predict ##
+```{r}
+predicted<-predict(nb,Validation_Data)
+head(predicted)
+```
+## confusion matrix ##
+```{r}
+CrossTable(x=Validation_Data$Flight.Status,y=predicted,prop.chisq = FALSE)
+```
+## Raw prediction ##
+```{r}
+predicted2<-predict(nb,Validation_Data,type = "raw")
+head(predicted2)
+```
+## 3Q) counts table and a proportion table outlining how many and what proportion of flights were delayed and on-time at each of the three airports.
+```{r}
+## count table ##
+table(Train_Data$Flight.Status,Train_Data$DEST)
+## propotion table ##
+prop.table(table(Train_Data$Flight.Status,Train_Data$DEST))
+```
+
+## 4Q) ROC curve ##
+```{r}
+library(pROC)
+roc(Validation_Data$Flight.Status,predicted2[,2])
+plot.roc(Validation_Data$Flight.Status,predicted2[,2])
+```
