@@ -1,0 +1,108 @@
+---
+title: "Midterm"
+author: "Rithin Gujja"
+date: "29/10/2019"
+output: html_document
+---
+## 1Q) ##
+```{r}
+mid<-read.csv("Universities.csv")
+test<-mid
+mid1<-mid[complete.cases(mid),]
+colMeans(is.na(mid1))*100
+```
+## 2Q) ##
+```{r}
+library(factoextra)
+library(tidyverse)
+library(ISLR)
+library(caret)
+set.seed(100)
+md<-mid1[,c(-1,-2,-3)]
+md1<-scale(md)
+
+k3<-kmeans(md1,centers = 3,nstart = 30)
+k3
+k3$centers
+k3$size
+fviz_cluster(k3,data = md1)
+fviz_nbclust(md1,kmeans,method = "wss")
+fviz_nbclust(md1,kmeans,method = "silhouette")
+k3$cluster[3]
+k3$withinss
+```
+## 3Q) ##
+```{r}
+viz<-cbind(mid1,k3$cluster)
+viz$Public..1...Private..2.<-factor(viz$Public..1...Private..2.,levels = c(1,2),labels = c("public","private"))
+viz$`k3$cluster`<-factor(viz$`k3$cluster`,levels = c(1,2,3),labels = c("cluster1","cluster2","cluster3"))
+plot(c(0), xaxt = 'n', ylab = "", type = "l",
+     ylim = c(min(k3$centers), max(k3$centers)), xlim = c(0, 18))
+axis(1, at = c(1:17), labels = FALSE)
+text(seq(1,17,by=1),par("usr")[3]-0.2,labels = colnames(md),srt = 45,pos =1,xpd = TRUE)
+for (i in c(1:3))
+  lines(k3$centers[i,], lty = i, lwd = 2) 
+text(x = 0.5, y = k3$centers[, 1], labels = paste("Cluster", c(1:3)))
+```
+
+
+
+
+
+
+
+
+
+
+## 4Q) ##
+```{r}
+head(viz[,c(1,2,3,21)])
+library(ggplot2)
+ggplot(viz,aes(x=viz$State,y=viz$Public..1...Private..2.,color=viz$`k3$cluster`))+geom_point()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 5Q) ##
+```{r}
+## By observing the above graph :::
+## Many of the colleges in the states are private universities.
+## cluster 2 holds more universities.
+## some states have public and private universities.
+## some states have only private universities.
+## some states have only public universities.
+## Many public and private universities with corresponding states have adjacent same clusters.
+```
+
+## 6Q) ##
+```{r}
+kk<-kmeans(md,centers = 3,nstart=30)
+p<-mean(kk$center[1,])
+q<-mean(kk$center[2,])
+r<-mean(kk$center[3,])
+y<-filter(test,College.Name=="Tufts University")
+z<-apply(y[,-c(1,2,3,10)],1,mean)
+dist(rbind(z,p))
+dist(rbind(z,q))
+dist(rbind(z,r))
+y$X..PT.undergrad=q
+y
+rin<-scale(rbind(mid1[,-c(1,2,3)],y[,-c(1,2,3)]))
+k<-kmeans(rin,centers = 3)
+res<-cbind(rbind(mid1,y),k$cluster)
+res[472,]
+## Tufts university is in the cluster 2 based on the euclidean distance.
+```
