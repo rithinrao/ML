@@ -1,0 +1,103 @@
+---
+title: "Hierarchical Clustering Assignment"
+author: "Rithin"
+date: "11/14/2019"
+output:
+  html_document: default
+  word_document: default
+---
+1Q)
+```{r}
+library(readr)
+Cereals<-read.csv("Cereals.csv")
+View(Cereals)
+library(cluster)
+library(factoextra)
+library(knitr)
+library(caret)
+library(dendextend)
+set.seed(123)
+
+# Excluding the missing values and categorical variables.
+nd<-na.omit(Cereals)
+nd1<-nd[,-c(1:3)]
+nf<-scale(nd1)
+
+# Hierarchical Cluster using Euclidean distance.
+E_d<-dist(nf,method = "euclidean")
+h_c<-hclust(E_d,method = "complete")
+plot(h_c,cex=0.6,hang=-1)
+
+# Finding the best method 
+h_c1<- agnes(nf,method = "ward")
+h_c2<-agnes(nf,method="average")
+h_c3<-agnes(nf,method="complete")
+h_c4<-agnes(nf,method="single")
+cbind(ward=h_c1$ac,average=h_c2$ac,complete=h_c3$ac,single=h_c4$ac)
+# From the above table, "Ward" method has the more accuracy.
+```
+2Q)
+```{r}
+# Plotting the Dendogram.
+pltree(h_c1,cex=0.6,hang=-1,main="Dendrogram of agnes")
+rect.hclust(h_c1, k = 4, border = 2:5)
+
+
+# Plotting the Dendogram of divisive hierarchical clustering.
+h_cd<-diana(nf)
+h_cd$dc
+pltree(h_cd,cex=0.6,hang=-1,"Dendrogram of diana")
+
+# Visualizing the clusters  
+c_1 <- cutree(h_c1,k=4) 
+
+```
+3Q)
+```{r}
+# Checking the stability of the cluster 
+nw1<-Cereals
+nw_om<-na.omit(nw1) 
+
+nw_index<-createDataPartition(nw_om$calories,p=0.5,list=FALSE)
+n1<-nw_om[nw_index,] # Partition A
+n2<-nw_om[-nw_index,] # Partition B
+
+#For Partition A the best mwethod is "ward" 
+h_n11<- agnes(scale(n1[,-c(1:3)]),method = "ward")
+h_n12<-agnes(scale(n1[,-c(1:3)]),method="average")
+h_n13<-agnes(scale(n1[,-c(1:3)]),method="complete")
+h_n14<-agnes(scale(n1[,-c(1:3)]),method="single")
+
+
+#For Parttition B the best methos is "ward"
+h_n21<- agnes(scale(n2[,-c(1:3)]),method = "ward")
+h_n22<-agnes(scale(n2[,-c(1:3)]),method="average")
+h_n23<-agnes(scale(n2[,-c(1:3)]),method="complete")
+h_n24<-agnes(scale(n2[,-c(1:3)]),method="single")
+
+
+
+pltree(h_n11,cex=0.6,hang=-1,main="Dendrogram of agnes")
+rect.hclust(h_n11, k = 3, border = 2:5)
+
+pltree(h_n21,cex=0.6,hang=-1,main="Dendrogram of agnes")
+rect.hclust(h_n21, k = 3, border = 2:5)
+
+tanglegram(as.dendrogram(h_n11),as.dendrogram(h_n21))
+cor_cophenetic(as.dendrogram(h_n11),as.dendrogram(h_n21))
+cor_bakers_gamma(as.dendrogram(h_n11),as.dendrogram(h_n21))
+
+## from the outputs stability of dendogram are not stable
+
+```
+4Q)
+```{r}
+r<-cbind(nw_om,c_1)
+r[r$c_1==1,]
+r[r$c_1==2,]
+r[r$c_1==3,]
+r[r$c_1==4,]
+## Cluster 1 has high rating values, So we can infer this cluster has more nutrition values.
+## since we using distance metic algoritm we essentally need to normalize data, Since the features of data are different, hence we need it to scale it to similar features.
+
+```
