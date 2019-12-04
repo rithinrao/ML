@@ -1,0 +1,9 @@
+---
+title: "final exam"
+author: "Rithin Gujja"
+date: "04/12/2019"
+output: word_document
+---
+
+```{r}
+```
